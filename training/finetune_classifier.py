@@ -443,4 +443,4 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
 
 if __name__ == "__main__":
     import config
-    final_metrics = finetune_classifier(config, dataset_name="dataset2", use_drive_checkpoint=True)
+    final_metrics = finetune_classifier(config, dataset_name=config.DATASET, use_drive_checkpoint=True)
