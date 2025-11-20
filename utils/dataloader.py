@@ -1,6 +1,7 @@
 import os
 import zipfile
 from torch.utils.data import DataLoader
+from torchvision import transforms
 from datasets.mri_dataset import MRIDataset
 import config
 
