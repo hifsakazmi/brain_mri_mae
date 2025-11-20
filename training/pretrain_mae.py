@@ -77,16 +77,22 @@ def pretrain(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    model = MAEModel(
-        img_size=cfg.MAE_IMG_SIZE,
-        patch_size=cfg.MAE_PATCH_SIZE,
-        encoder_dim=cfg.MAE_ENCODER_DIM,
-        encoder_depth=cfg.MAE_ENCODER_DEPTH,
-        encoder_heads=cfg.MAE_ENCODER_HEADS,
-        decoder_dim=cfg.MAE_DECODER_DIM,
-        decoder_depth=cfg.MAE_DECODER_DEPTH,
-        decoder_heads=cfg.MAE_DECODER_HEADS,
-        mask_ratio=cfg.MAE_MASK_RATIO
+    # model = MAEModel(
+    #     img_size=cfg.MAE_IMG_SIZE,
+    #     patch_size=cfg.MAE_PATCH_SIZE,
+    #     encoder_dim=cfg.MAE_ENCODER_DIM,
+    #     encoder_depth=cfg.MAE_ENCODER_DEPTH,
+    #     encoder_heads=cfg.MAE_ENCODER_HEADS,
+    #     decoder_dim=cfg.MAE_DECODER_DIM,
+    #     decoder_depth=cfg.MAE_DECODER_DEPTH,
+    #     decoder_heads=cfg.MAE_DECODER_HEADS,
+    #     mask_ratio=cfg.MAE_MASK_RATIO
+    # ).to(device)
+
+    # Use SimpleMAE for DEBUG
+    model = SimpleMAEModel(
+        mask_ratio=cfg.MAE_MASK_RATIO,
+        img_size=cfg.MAE_IMG_SIZE
     ).to(device)
 
     # DEBUG: Check loss calculation
@@ -121,9 +127,10 @@ def pretrain(cfg):
         # Training
         for batch_idx, (imgs, _) in enumerate(train_loader):  
             imgs = imgs.to(device)
-            decoded_patches, original_patches, mask = model(imgs)
+            decoded_patches, _, mask = model(imgs)
+            original_pixel_patches = model.get_pixel_patches(imgs)  
             
-            loss = (decoded_patches - original_patches) ** 2
+            loss = (decoded_patches - original_pixel_patches) ** 2
             loss = loss.mean(dim=-1)
             loss = (loss * mask).sum() / mask.sum()
             

@@ -161,6 +161,16 @@ class MAEModel(nn.Module):
         pred = self.forward_decoder(latent, ids_restore)
         
         return pred, patches, mask
+    
+    def get_pixel_patches(self, imgs):
+        """Get actual pixel values for patches"""
+        B, C, H, W = imgs.shape
+        p = self.patch_size
+        patches = imgs.unfold(2, p, p).unfold(3, p, p)
+        patches = patches.contiguous().view(B, C, -1, p, p)
+        patches = patches.permute(0, 2, 3, 4, 1).contiguous()
+        patches = patches.view(B, -1, C * p * p)
+        return patches
 
 class SimpleMAEModel(nn.Module):
     """Ultra-simple MAE that definitely works"""

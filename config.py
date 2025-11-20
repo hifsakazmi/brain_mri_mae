@@ -21,7 +21,7 @@ MAE_ENCODER_HEADS = 12
 MAE_DECODER_DIM = 512
 MAE_DECODER_DEPTH = 8
 MAE_DECODER_HEADS = 16
-MAE_MASK_RATIO = 0.75
+MAE_MASK_RATIO = 0.85
 #----------------------------
 # Selected Dataset
 #----------------------------
