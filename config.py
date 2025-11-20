@@ -10,7 +10,7 @@ FINETUNE_EPOCHS = 5
 #----------------------------
 MAE_LEARNING_RATE = 1e-4
 MAE_BATCH_SIZE = 32
-MAE_EPOCHS = 10
+MAE_EPOCHS = 2
 MAE_ENCODER_SAVE_PATH = "./models/mae_encoder.pth"
 MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
 MAE_IMG_SIZE = 224
