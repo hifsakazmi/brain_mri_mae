@@ -15,10 +15,13 @@ def prepare_dataset1():
     Returns local folder path containing the dataset.
     """
     local_path = "/content"  # This is where your files get extracted
-    
     zip_path = "/content/images_binary.zip"
     
-    if not os.path.exists("/content/training_images") or not os.path.exists("/content/testing_images"):
+    # Check if the training_images folder exists
+    training_path = "/content/training_images"
+    testing_path = "/content/testing_images"
+    
+    if not os.path.exists(training_path) or not os.path.exists(testing_path):
         print("Downloading 2-class dataset from Google Drive...")
         
         # Install gdown if not already installed
@@ -30,16 +33,31 @@ def prepare_dataset1():
             import gdown
         
         # Download the file
+        print("Downloading zip file...")
         gdown.download(config.DATASET1_PATH, zip_path, quiet=False)
+        
+        # Check if download was successful
+        if not os.path.exists(zip_path):
+            raise FileNotFoundError(f"Download failed! Zip file not found at {zip_path}")
         
         # Extract the zip file
         print("Extracting dataset...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(local_path)
         
-        # Remove the zip file to save space
+        # Check if extraction was successful
+        if not os.path.exists(training_path):
+            # Debug: see what was actually extracted
+            print("Contents of /content after extraction:")
+            for item in os.listdir(local_path):
+                print(f"  {item}")
+            raise FileNotFoundError(f"Extraction failed! training_images not found at {training_path}")
+        
+        # Optional: Remove the zip file to save space
         os.remove(zip_path)
         print("Dataset downloaded and extracted successfully!")
+    else:
+        print("Dataset 1 already exists!")
     
     return local_path
 
