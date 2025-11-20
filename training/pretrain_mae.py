@@ -100,18 +100,23 @@ def pretrain(cfg):
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total parameters: {total_params:,}") 
 
-    # Create local directories for saving models
+    # Create local directories
     os.makedirs(os.path.dirname(cfg.MAE_ENCODER_SAVE_PATH), exist_ok=True)
     
     # Import save utilities
     from utils.save_utils import save_best_models, is_drive_mounted
-
+    
     # Check Drive status
     if is_drive_mounted():
         print("✅ Google Drive is mounted - models will be saved to Drive")
     else:
         print("⚠️  Google Drive not mounted - models will be saved locally")
     
+    # Initialize loss tracking
+    train_losses = []
+    val_losses = []
+    epochs_list = []
+
     # For MAE pretraining, we don't need labels, so we can use any dataset
     train_loader, _ = get_dataloader(
         dataset_name=cfg.DATASET,  
@@ -154,6 +159,11 @@ def pretrain(cfg):
         # Validation
         val_loss = validate_mae(model, cfg, device)
         
+        # Track losses
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+        epochs_list.append(epoch + 1)
+        
         print(f"Epoch {epoch+1} — Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
         
         # Save best model (to Drive if mounted, otherwise locally)
@@ -175,6 +185,57 @@ def pretrain(cfg):
                 print(f"⚠️  Model saved with warnings. Val Loss: {val_loss:.4f}")
 
     print(f"Training completed! Best validation loss: {best_val_loss:.4f}")
+    
+    # Plot loss curves
+    plot_loss_curves(epochs_list, train_losses, val_losses)
+    
+    # Save loss data
+    save_loss_data(epochs_list, train_losses, val_losses)
+
+def plot_loss_curves(epochs, train_losses, val_losses):
+    """Plot training and validation loss curves"""
+    import matplotlib.pyplot as plt
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, train_losses, 'b-', label='Training Loss', linewidth=2)
+    plt.plot(epochs, val_losses, 'r-', label='Validation Loss', linewidth=2)
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('MAE Training Progress')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.yscale('log')  # Log scale for better visualization
+    plt.tight_layout()
+    
+    # Save plot
+    plt.savefig('./training_loss_curve.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+def save_loss_data(epochs, train_losses, val_losses):
+    """Save loss data to file for later analysis"""
+    import json
+    import pandas as pd
+    
+    loss_data = {
+        'epochs': epochs,
+        'train_losses': [float(loss) for loss in train_losses],
+        'val_losses': [float(loss) for loss in val_losses]
+    }
+    
+    # Save as JSON
+    with open('./training_loss_data.json', 'w') as f:
+        json.dump(loss_data, f, indent=2)
+    
+    # Save as CSV
+    df = pd.DataFrame({
+        'epoch': epochs,
+        'train_loss': train_losses,
+        'val_loss': val_losses
+    })
+    df.to_csv('./training_loss_data.csv', index=False)
+    
+    print("✅ Loss data saved to './training_loss_data.json' and './training_loss_data.csv'")
+
 
 if __name__ == "__main__":
     import config
