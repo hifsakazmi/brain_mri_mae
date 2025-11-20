@@ -9,7 +9,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_mae import MAEModel
 from models.vit_mae import SimpleMAEModel
 from utils.dataloader import get_dataloader 
-from utils.save_utils import save_to_drive, save_encoder_to_drive
 
 def validate_mae(model, cfg, device):
     """Validate MAE model on test split"""
