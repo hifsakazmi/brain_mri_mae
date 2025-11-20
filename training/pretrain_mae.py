@@ -42,6 +42,11 @@ def pretrain(cfg):
             # Get all three returns from MAE model
             decoded_patches, original_patches, mask = model(imgs)
             
+            # DEBUG: Print shapes to see the issue
+            print(f"DEBUG - decoded_patches shape: {decoded_patches.shape}")
+            print(f"DEBUG - original_patches shape: {original_patches.shape}") 
+            print(f"DEBUG - mask shape: {mask.shape}")
+            
             # Apply mask to focus loss only on reconstructed (masked) patches
             loss = (decoded_patches - original_patches) ** 2
             loss = loss.mean(dim=-1)  # Mean over patch dimensions
@@ -62,7 +67,7 @@ def pretrain(cfg):
         print(f"Epoch {epoch+1} — Average loss: {avg_loss:.4f}")
 
     torch.save(model.encoder.state_dict(), cfg.MAE_ENCODER_SAVE_PATH)
-    torch.save(model.state_dict(), cfg.MAE_FULL_SAVE_PATH)  # Optional: save full model
+    torch.save(model.state_dict(), cfg.MAE_FULL_SAVE_PATH) 
     print(f"Model saved to {cfg.MAE_ENCODER_SAVE_PATH}")
 
 if __name__ == "__main__":
