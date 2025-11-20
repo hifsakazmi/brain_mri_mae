@@ -21,7 +21,7 @@ def test_dataset(dataset_name="dataset1", split="train"):
     loader, num_classes = get_dataloader(dataset_name=dataset_name, split=split)
     
     # Get class names from MRIDataset
-    classes = loader.dataset.classes
+    classes = loader.dataset.class_names
     print(f"Found classes: {classes}")
     print(f"Number of samples: {len(loader.dataset)}")
 
