@@ -9,8 +9,12 @@ def show_batch(images, labels, classes):
     fig, axes = plt.subplots(1, batch_size, figsize=(15, 5))
     if batch_size == 1:
         axes = [axes]
+    
     for i, ax in enumerate(axes):
-        img = images[i].squeeze().cpu()  # remove channel dim if grayscale
+        # Convert from PyTorch tensor (C,H,W) to matplotlib format (H,W,C)
+        img = images[i].permute(1, 2, 0).cpu()  # Change from (3,224,224) to (224,224,3)
+        img = img.squeeze()  # remove extra dimensions if any
+        
         ax.imshow(img, cmap="gray")
         ax.set_title(classes[labels[i]])
         ax.axis("off")
