@@ -14,7 +14,17 @@ def pretrain(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    model = SimpleMAEModel().to(device)
+    model = SimpleMAEModel(
+        img_size=cfg.MAE_IMG_SIZE,
+        patch_size=cfg.MAE_PATCH_SIZE,
+        encoder_dim=cfg.MAE_ENCODER_DIM,
+        encoder_depth=cfg.MAE_ENCODER_DEPTH,
+        encoder_heads=cfg.MAE_ENCODER_HEADS,
+        decoder_dim=cfg.MAE_DECODER_DIM,
+        decoder_depth=cfg.MAE_DECODER_DEPTH,
+        decoder_heads=cfg.MAE_DECODER_HEADS,
+        mask_ratio=cfg.MAE_MASK_RATIO
+    ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.MAE_LEARNING_RATE) 
 
     total_params = sum(p.numel() for p in model.parameters())

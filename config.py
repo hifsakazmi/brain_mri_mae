@@ -13,6 +13,15 @@ MAE_BATCH_SIZE = 32
 MAE_EPOCHS = 2
 MAE_ENCODER_SAVE_PATH = "./models/mae_encoder.pth"
 MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
+MAE_IMG_SIZE = 224
+MAE_PATCH_SIZE = 16
+MAE_ENCODER_DIM = 768
+MAE_ENCODER_DEPTH = 12
+MAE_ENCODER_HEADS = 12
+MAE_DECODER_DIM = 512
+MAE_DECODER_DEPTH = 8
+MAE_DECODER_HEADS = 16
+MAE_MASK_RATIO = 0.75
 
 # ---------------------------
 # Dataset 1: binary brain tumor
