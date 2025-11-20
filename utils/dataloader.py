@@ -17,11 +17,11 @@ def prepare_dataset2():
     if it hasn't been downloaded yet.
     Returns local folder path containing the dataset.
     """
-    local_path = "./datasets/4class_brain_tumor"
+    local_path = "/kaggle/input/brain-tumor-classification-mri"
     if not os.path.exists(local_path):
         os.makedirs(local_path, exist_ok=True)
         print("Downloading 4-class Kaggle dataset...")
-        kagglehub.dataset_download(config.DATASET2_KAGGLE_PATH, localpath)
+        localpath = kagglehub.dataset_download(config.DATASET2_KAGGLE_PATH)
     return local_path
 
 
@@ -29,6 +29,7 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     """
     Returns a DataLoader for the requested dataset and split.
     """
+    os.environ['KAGGLEHUB_CACHE'] = config.KAGGLEHUB_CACHE
     batch_size = batch_size or config.BATCH_SIZE
     num_workers = num_workers or config.NUM_WORKERS
     img_size = img_size or config.IMG_SIZE
