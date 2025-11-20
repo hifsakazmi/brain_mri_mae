@@ -194,7 +194,7 @@ class SimpleMAEModel(nn.Module):
             nn.Linear(512, 3 * self.patch_size * self.patch_size),
         )
 
-    def patchify(self, images):
+    def get_pixel_patches(self, images):
         """Convert images to patches"""
         B, C, H, W = images.shape
         patches = images.unfold(2, self.patch_size, self.patch_size).unfold(3, self.patch_size, self.patch_size)
@@ -206,7 +206,7 @@ class SimpleMAEModel(nn.Module):
         B, C, H, W = x.shape
         
         # Get all patches
-        all_patches = self.patchify(x)  # [B, num_patches, patch_dim]
+        all_patches = self.get_pixel_patches(x)  # [B, num_patches, patch_dim]
         num_patches = all_patches.shape[1]
         num_mask = int(num_patches * self.mask_ratio)
         
