@@ -123,7 +123,7 @@ class MAEModel(nn.Module):
         return decoded_patches, patches, mask
 
 class SimpleMAEModel(nn.Module):
-"""Ultra-simple MAE that definitely works"""
+    """Ultra-simple MAE that definitely works"""
     def __init__(self, mask_ratio=0.75, img_size=224):
         super().__init__()
         self.mask_ratio = mask_ratio
