@@ -22,6 +22,16 @@ MAE_DECODER_DIM = 512
 MAE_DECODER_DEPTH = 8
 MAE_DECODER_HEADS = 16
 MAE_MASK_RATIO = 0.85
+
+#------------------------------
+# Classifier Settings
+#------------------------------ 
+CLASSIFIER_LEARNING_RATE = 1e-4
+CLASSIFIER_BATCH_SIZE = 32
+CLASSIFIER_EPOCHS = 50
+CLASSIFIER_WEIGHT_DECAY = 0.05
+CLASSIFIER_SAVE_PATH = "./models/classifier.pth"
+
 #----------------------------
 # Selected Dataset
 #----------------------------
@@ -39,7 +49,7 @@ DATASET1_NUM_CLASSES = 2
 DATASET2_NAME = "4class_brain_tumor"
 DATASET2_KAGGLE_PATH = "sartajbhuvaji/brain-tumor-classification-mri"
 DATASET2_NUM_CLASSES = 4
-
+ 
 # ---------------------------
 # Common training settings
 # ---------------------------
