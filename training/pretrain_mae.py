@@ -79,22 +79,22 @@ def pretrain(cfg):
     print(f"Using device: {device}")
 
     # model = MAEModel(
-    #     img_size=cfg.MAE_IMG_SIZE,
-    #     patch_size=cfg.MAE_PATCH_SIZE,
-    #     encoder_dim=cfg.MAE_ENCODER_DIM,
-    #     encoder_depth=cfg.MAE_ENCODER_DEPTH,
-    #     encoder_heads=cfg.MAE_ENCODER_HEADS,
-    #     decoder_dim=cfg.MAE_DECODER_DIM,
-    #     decoder_depth=cfg.MAE_DECODER_DEPTH,
-    #     decoder_heads=cfg.MAE_DECODER_HEADS,
-    #     mask_ratio=cfg.MAE_MASK_RATIO
-    # ).to(device)
+        img_size=cfg.MAE_IMG_SIZE,
+        patch_size=cfg.MAE_PATCH_SIZE,
+        encoder_dim=cfg.MAE_ENCODER_DIM,
+        encoder_depth=cfg.MAE_ENCODER_DEPTH,
+        encoder_heads=cfg.MAE_ENCODER_HEADS,
+        decoder_dim=cfg.MAE_DECODER_DIM,
+        decoder_depth=cfg.MAE_DECODER_DEPTH,
+        decoder_heads=cfg.MAE_DECODER_HEADS,
+        mask_ratio=cfg.MAE_MASK_RATIO
+    ).to(device)
 
     # Use SimpleMAE for DEBUG
-    model = SimpleMAEModel(
-        mask_ratio=cfg.MAE_MASK_RATIO,
-        img_size=cfg.MAE_IMG_SIZE
-    ).to(device)
+    # model = SimpleMAEModel(
+    #     mask_ratio=cfg.MAE_MASK_RATIO,
+    #     img_size=cfg.MAE_IMG_SIZE
+    # ).to(device)
 
     # DEBUG: Check loss calculation
     print("=== DEBUGGING LOSS CALCULATION ===")

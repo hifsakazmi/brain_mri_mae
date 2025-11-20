@@ -151,8 +151,7 @@ class MAEModel(nn.Module):
             mask_ratio = self.mask_ratio
             
         # Get original patches for reconstruction target
-        patches = self.patch_embed(imgs)
-        patches = patches.flatten(2).transpose(1, 2)  # [B, N, D]
+        patches = self.get_pixel_patches(imgs)
         
         # Encoder forward
         latent, ids_restore, mask = self.forward_encoder(imgs, mask_ratio)
