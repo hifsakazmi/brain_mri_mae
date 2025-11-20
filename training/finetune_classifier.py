@@ -295,42 +295,64 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     print(f"Training samples: {len(train_loader.dataset)}")
     print(f"Validation samples: {len(val_loader.dataset)}")
     
-    # Load pre-trained encoder
-    encoder = None
-    encoder_type = "none"
+    # Create new MAE model and load weights into encoder
+    from models.vit_mae import MAEModel
+    
+    # Create MAE model structure
+    mae_model = MAEModel(
+        img_size=cfg.MAE_IMG_SIZE,
+        patch_size=cfg.MAE_PATCH_SIZE,
+        encoder_dim=cfg.MAE_ENCODER_DIM,
+        encoder_depth=cfg.MAE_ENCODER_DEPTH,
+        encoder_heads=cfg.MAE_ENCODER_HEADS,
+        decoder_dim=cfg.MAE_DECODER_DIM,
+        decoder_depth=cfg.MAE_DECODER_DEPTH,
+        decoder_heads=cfg.MAE_DECODER_HEADS,
+        mask_ratio=cfg.MAE_MASK_RATIO
+    )
+    
+    # Try to load pre-trained weights
+    checkpoint_loaded = False
+    checkpoint_path = None
     
     if use_drive_checkpoint:
-        drive_checkpoint = get_latest_drive_checkpoint()
-        if drive_checkpoint:
-            encoder, encoder_type = load_pretrained_encoder(cfg, drive_checkpoint)
+        checkpoint_path = get_latest_drive_checkpoint()
     
-    if encoder is None and os.path.exists(cfg.MAE_ENCODER_SAVE_PATH):
-        print(f"🔄 Trying local checkpoint: {cfg.MAE_ENCODER_SAVE_PATH}")
-        encoder, encoder_type = load_pretrained_encoder(cfg, cfg.MAE_ENCODER_SAVE_PATH)
+    if checkpoint_path is None and os.path.exists(cfg.MAE_ENCODER_SAVE_PATH):
+        checkpoint_path = cfg.MAE_ENCODER_SAVE_PATH
     
-    # Create classifier
-    if encoder is not None:
-        if encoder_type == "proper":
-            classifier = MAEClassifier(encoder, num_classes)
-            print("✅ Using ProperMAE-based classifier")
-        elif encoder_type == "simple":
-            classifier = SimpleMAEClassifier(encoder, num_classes)
-            print("✅ Using SimpleMAE-based classifier")
+    if checkpoint_path and os.path.exists(checkpoint_path):
+        try:
+            print(f"🔄 Loading checkpoint from: {checkpoint_path}")
+            checkpoint = torch.load(checkpoint_path, map_location='cpu')
+            
+            # Handle different checkpoint formats
+            if 'patch_embed.weight' in checkpoint:
+                # Full MAE model checkpoint
+                mae_model.load_state_dict(checkpoint)
+            else:
+                # Encoder-only checkpoint - load into encoder
+                mae_model.encoder.load_state_dict(checkpoint)
+            
+            print("✅ Pre-trained weights loaded successfully")
+            checkpoint_loaded = True
+        except Exception as e:
+            print(f"❌ Failed to load checkpoint: {e}")
+            print("⚠️  Using randomly initialized weights")
     else:
-        from models.vit_mae import MAEModel
-        mae_model = MAEModel(
-            img_size=cfg.MAE_IMG_SIZE,
-            patch_size=cfg.MAE_PATCH_SIZE,
-            encoder_dim=cfg.MAE_ENCODER_DIM,
-            encoder_depth=cfg.MAE_ENCODER_DEPTH,
-            encoder_heads=cfg.MAE_ENCODER_HEADS,
-            decoder_dim=cfg.MAE_DECODER_DIM,
-            decoder_depth=cfg.MAE_DECODER_DEPTH,
-            decoder_heads=cfg.MAE_DECODER_HEADS,
-            mask_ratio=cfg.MAE_MASK_RATIO
-        )
-        classifier = MAEClassifier(mae_model.encoder, num_classes)
-        print("⚠️  Using randomly initialized encoder")
+        print("⚠️  No checkpoint found, using random initialization")
+    
+    # Use the encoder from the MAE model
+    encoder = mae_model.encoder
+    classifier = MAEClassifier(
+        encoder, 
+        num_classes,
+        img_size=cfg.MAE_IMG_SIZE,
+        patch_size=cfg.MAE_PATCH_SIZE,
+        encoder_dim=cfg.MAE_ENCODER_DIM
+    )
+    
+    print(f"✅ Classifier created {'with pre-trained weights' if checkpoint_loaded else 'with random initialization'}")
     
     classifier = classifier.to(device)
     
