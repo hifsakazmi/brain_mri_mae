@@ -103,6 +103,9 @@ def pretrain(cfg):
     # Create local directories for saving models
     os.makedirs(os.path.dirname(cfg.MAE_ENCODER_SAVE_PATH), exist_ok=True)
     
+    # Import save utilities
+    from utils.save_utils import save_best_models, is_drive_mounted
+
     # Check Drive status
     if is_drive_mounted():
         print("✅ Google Drive is mounted - models will be saved to Drive")
