@@ -104,6 +104,9 @@ def pretrain(cfg):
     # Create local directories for saving models
     os.makedirs(os.path.dirname(cfg.MAE_ENCODER_SAVE_PATH), exist_ok=True)
     
+    # Import save utilities
+    from utils.save_utils import save_best_to_drive
+    
     # For MAE pretraining, we don't need labels, so we can use any dataset
     train_loader, _ = get_dataloader(
         dataset_name=cfg.DATASET,  
@@ -148,7 +151,7 @@ def pretrain(cfg):
         
         print(f"Epoch {epoch+1} — Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
         
-        # Save best model locally
+        # Save best model locally AND to Google Drive
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             
@@ -156,18 +159,16 @@ def pretrain(cfg):
             torch.save(model.encoder.state_dict(), cfg.MAE_ENCODER_SAVE_PATH)
             torch.save(model.state_dict(), cfg.MAE_FULL_SAVE_PATH)
             
+            # Save to Google Drive
+            save_best_to_drive(model.encoder, model, "mae_proper")
+            
             print(f"New best model saved! Val Loss: {val_loss:.4f}")
 
     print(f"Training completed! Best validation loss: {best_val_loss:.4f}")
     print(f"Final model saved locally to {cfg.MAE_ENCODER_SAVE_PATH}")
     
-    # Save final models to Google Drive using utility functions
-    from utils.save_utils import save_to_drive, save_encoder_to_drive
-    
-    save_encoder_to_drive(model.encoder, "mae_proper")
-    save_to_drive(model, "mae_proper_full")
-    
-    print("✅ All models backed up to Google Drive!")
+    # Final confirmation
+    print("✅ Training completed successfully!")
 
 if __name__ == "__main__":
     import config
