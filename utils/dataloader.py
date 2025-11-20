@@ -32,6 +32,12 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     num_workers = num_workers or config.NUM_WORKERS
     img_size = img_size or config.IMG_SIZE
 
+    # Define transform that converts images to tensors
+    transform = transforms.Compose([
+        transforms.Resize((img_size, img_size)),
+        transforms.ToTensor(),
+    ])
+
     if dataset_name.lower() == "dataset1":
         path = config.DATASET1_TRAIN_PATH if split=="train" else config.DATASET1_TEST_PATH
         num_classes = config.DATASET1_NUM_CLASSES
@@ -46,6 +52,6 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     else:
         raise ValueError(f"Unknown dataset {dataset_name}")
 
-    dataset = MRIDataset(path)
+    dataset = MRIDataset(path, transform)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=(split=="train"), num_workers=num_workers)
     return loader, num_classes
