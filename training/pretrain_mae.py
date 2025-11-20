@@ -16,7 +16,13 @@ def pretrain():
     print(f"Using device: {device}")
 
     model = MAEModel().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.MAE_LEARNING_RATE)  
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.MAE_LEARNING_RATE) 
+
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"Total parameters: {total_params:,}") 
+
+    # Create directory for saving models
+    os.makedirs(os.path.dirname(config.MAE_ENCODER_SAVE_PATH), exist_ok=True)
     
     # For MAE pretraining, we don't need labels, so we can use any dataset
     loader, _ = get_dataloader(
@@ -32,15 +38,18 @@ def pretrain():
         
         for batch_idx, (imgs, _) in enumerate(loader):  
             imgs = imgs.to(device)
+
+            # Get all three returns from MAE model
+            decoded_patches, original_patches, mask = model(imgs)
             
-            decoded = model(imgs)
-            
-            # FIXME: You need to calculate loss between decoded patches and original patches
-            # This is incomplete - see fixes needed in vit_mae.py below
-            loss = torch.nn.functional.mse_loss(decoded, imgs)  # This won't work as-is
+            # Apply mask to focus loss only on reconstructed (masked) patches
+            loss = (decoded_patches - original_patches) ** 2
+            loss = loss.mean(dim=-1)  # Mean over patch dimensions
+            loss = (loss * mask).sum() / mask.sum()  # Mean only over masked patches
             
             optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
             total_loss += loss.item()
