@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_mae import MAEModel
 from models.vit_mae import SimpleMAEModel
 from utils.dataloader import get_dataloader 
+from utils.save_utils import save_to_drive, save_encoder_to_drive
 
 def validate_mae(model, cfg, device):
     """Validate MAE model on test split"""
@@ -90,12 +91,6 @@ def pretrain(cfg):
         mask_ratio=cfg.MAE_MASK_RATIO
     ).to(device)
 
-    # Use SimpleMAE for DEBUG
-    # model = SimpleMAEModel(
-    #     mask_ratio=cfg.MAE_MASK_RATIO,
-    #     img_size=cfg.MAE_IMG_SIZE
-    # ).to(device)
-
     # DEBUG: Check loss calculation
     print("=== DEBUGGING LOSS CALCULATION ===")
     debug_loss_calculation(model, cfg, device)
@@ -106,7 +101,7 @@ def pretrain(cfg):
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total parameters: {total_params:,}") 
 
-    # Create directory for saving models
+    # Create local directories for saving models
     os.makedirs(os.path.dirname(cfg.MAE_ENCODER_SAVE_PATH), exist_ok=True)
     
     # For MAE pretraining, we don't need labels, so we can use any dataset
@@ -153,16 +148,26 @@ def pretrain(cfg):
         
         print(f"Epoch {epoch+1} — Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
         
-        # Save best model
+        # Save best model locally
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            
+            # Save locally
             torch.save(model.encoder.state_dict(), cfg.MAE_ENCODER_SAVE_PATH)
             torch.save(model.state_dict(), cfg.MAE_FULL_SAVE_PATH)
+            
             print(f"New best model saved! Val Loss: {val_loss:.4f}")
 
     print(f"Training completed! Best validation loss: {best_val_loss:.4f}")
-    print(f"Final model saved to {cfg.MAE_ENCODER_SAVE_PATH}")
-
+    print(f"Final model saved locally to {cfg.MAE_ENCODER_SAVE_PATH}")
+    
+    # Save final models to Google Drive using utility functions
+    from utils.save_utils import save_to_drive, save_encoder_to_drive
+    
+    save_encoder_to_drive(model.encoder, "mae_proper")
+    save_to_drive(model, "mae_proper_full")
+    
+    print("✅ All models backed up to Google Drive!")
 
 if __name__ == "__main__":
     import config
