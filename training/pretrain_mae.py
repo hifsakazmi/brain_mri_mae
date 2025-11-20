@@ -13,7 +13,7 @@ def validate_mae(model, cfg, device):
     """Validate MAE model on test split"""
     model.eval()
     val_loader, _ = get_dataloader(
-        dataset_name="dataset1",  
+        dataset_name=cfg.DATASET,  
         split="test",
         batch_size=cfg.MAE_BATCH_SIZE,
         num_workers=2 
@@ -37,6 +37,42 @@ def validate_mae(model, cfg, device):
     
     return total_loss / num_batches
 
+def debug_loss_calculation(model, cfg, device):
+    """Debug the loss calculation"""
+    model.eval()
+    loader, _ = get_dataloader(cfg.DATASET, "train", cfg.MAE_BATCH_SIZE, num_workers=2)
+    
+    with torch.no_grad():
+        imgs, _ = next(iter(loader))
+        imgs = imgs.to(device)
+        decoded_patches, original_patches, mask = model(imgs)
+        
+        print(f"Input images shape: {imgs.shape}")
+        print(f"Decoded patches shape: {decoded_patches.shape}")
+        print(f"Original patches shape: {original_patches.shape}")
+        print(f"Mask shape: {mask.shape}")
+        print(f"Mask sum (how many masked): {mask.sum().item()}")
+        print(f"Mask ratio: {mask.sum().item() / mask.numel():.3f}")
+        
+        # Check individual components
+        diff = (decoded_patches - original_patches) ** 2
+        print(f"Diff range: [{diff.min().item():.6f}, {diff.max().item():.6f}]")
+        
+        loss_per_patch = diff.mean(dim=-1)
+        print(f"Loss per patch range: [{loss_per_patch.min().item():.6f}, {loss_per_patch.max().item():.6f}]")
+        
+        masked_loss = (loss_per_patch * mask).sum()
+        mask_sum = mask.sum()
+        print(f"Masked loss sum: {masked_loss.item():.6f}")
+        print(f"Mask sum: {mask_sum.item()}")
+        
+        final_loss = masked_loss / mask_sum
+        print(f"Final loss: {final_loss.item():.6f}")
+        
+        # Check if patches are actually different
+        mse_between = torch.nn.functional.mse_loss(decoded_patches, original_patches)
+        print(f"Direct MSE between decoded and original: {mse_between.item():.6f}")
+
 def pretrain(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
@@ -52,6 +88,11 @@ def pretrain(cfg):
         decoder_heads=cfg.MAE_DECODER_HEADS,
         mask_ratio=cfg.MAE_MASK_RATIO
     ).to(device)
+
+    # DEBUG: Check loss calculation
+    print("=== DEBUGGING LOSS CALCULATION ===")
+    debug_loss_calculation(model, cfg, device)
+    print("=== END DEBUG ===")
     
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.MAE_LEARNING_RATE) 
 
@@ -63,7 +104,7 @@ def pretrain(cfg):
     
     # For MAE pretraining, we don't need labels, so we can use any dataset
     train_loader, _ = get_dataloader(
-        dataset_name="dataset1",  
+        dataset_name=cfg.DATASET,  
         split="train",
         batch_size=cfg.MAE_BATCH_SIZE,
         num_workers=2 
@@ -113,6 +154,7 @@ def pretrain(cfg):
 
     print(f"Training completed! Best validation loss: {best_val_loss:.4f}")
     print(f"Final model saved to {cfg.MAE_ENCODER_SAVE_PATH}")
+
 
 if __name__ == "__main__":
     import config
