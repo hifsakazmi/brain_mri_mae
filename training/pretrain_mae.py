@@ -104,8 +104,11 @@ def pretrain(cfg):
     # Create local directories for saving models
     os.makedirs(os.path.dirname(cfg.MAE_ENCODER_SAVE_PATH), exist_ok=True)
     
-    # Import save utilities
-    from utils.save_utils import save_best_to_drive
+    # Check Drive status
+    if is_drive_mounted():
+        print("✅ Google Drive is mounted - models will be saved to Drive")
+    else:
+        print("⚠️  Google Drive not mounted - models will be saved locally")
     
     # For MAE pretraining, we don't need labels, so we can use any dataset
     train_loader, _ = get_dataloader(
@@ -151,24 +154,25 @@ def pretrain(cfg):
         
         print(f"Epoch {epoch+1} — Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
         
-        # Save best model locally AND to Google Drive
+        # Save best model (to Drive if mounted, otherwise locally)
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             
-            # Save locally
-            torch.save(model.encoder.state_dict(), cfg.MAE_ENCODER_SAVE_PATH)
-            torch.save(model.state_dict(), cfg.MAE_FULL_SAVE_PATH)
+            # Save using our smart save function
+            success = save_best_models(
+                encoder=model.encoder,
+                full_model=model,
+                model_name="mae_proper",
+                local_encoder_path=cfg.MAE_ENCODER_SAVE_PATH,
+                local_full_path=cfg.MAE_FULL_SAVE_PATH
+            )
             
-            # Save to Google Drive
-            save_best_to_drive(model.encoder, model, "mae_proper")
-            
-            print(f"New best model saved! Val Loss: {val_loss:.4f}")
+            if success:
+                print(f"✅ New best model saved! Val Loss: {val_loss:.4f}")
+            else:
+                print(f"⚠️  Model saved with warnings. Val Loss: {val_loss:.4f}")
 
     print(f"Training completed! Best validation loss: {best_val_loss:.4f}")
-    print(f"Final model saved locally to {cfg.MAE_ENCODER_SAVE_PATH}")
-    
-    # Final confirmation
-    print("✅ Training completed successfully!")
 
 if __name__ == "__main__":
     import config
