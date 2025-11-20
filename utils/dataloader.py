@@ -19,7 +19,6 @@ def prepare_dataset2():
     """
     local_path = "/kaggle/input/brain-tumor-classification-mri"
     if not os.path.exists(local_path):
-        os.makedirs(local_path, exist_ok=True)
         print("Downloading 4-class Kaggle dataset...")
         localpath = kagglehub.dataset_download(config.DATASET2_KAGGLE_PATH)
     return local_path
