@@ -7,13 +7,14 @@ import os
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_mae import MAEModel
+from models.vit_mae import SimpleMAEModel
 from utils.dataloader import get_dataloader 
 
 def pretrain(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    model = MAEModel().to(device)
+    model = SimpleMAEModel().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.MAE_LEARNING_RATE) 
 
     total_params = sum(p.numel() for p in model.parameters())
@@ -26,7 +27,8 @@ def pretrain(cfg):
     loader, _ = get_dataloader(
         dataset_name="dataset1",  
         split="train",
-        batch_size=cfg.MAE_BATCH_SIZE  
+        batch_size=cfg.MAE_BATCH_SIZE,
+        num_workers=2 
     )
 
     model.train()

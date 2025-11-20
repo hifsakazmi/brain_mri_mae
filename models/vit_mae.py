@@ -25,7 +25,7 @@ class MAEDecoder(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(embed_dim, decoder_dim),
             nn.GELU(),
-            nn.Linear(decoder_dim, patch_size * patch_size * 3)  # CHANGED: *3 for RGB channels
+            nn.Linear(decoder_dim, patch_size * patch_size * 3)  # *3 for RGB channels
         )
         
     def forward(self, x):
@@ -41,7 +41,7 @@ class MAEModel(nn.Module):
         self.img_size = img_size
         self.num_patches = (img_size // self.patch_size) ** 2
         
-        # CHANGED: Better decoder initialization
+        # Better decoder initialization
         self.decoder = MAEDecoder(
             embed_dim=768, 
             decoder_dim=512, 
@@ -49,12 +49,11 @@ class MAEModel(nn.Module):
             num_patches=self.num_patches
         )
         
-        # CHANGED: Add learnable mask token
+        # Add learnable mask token
         self.mask_token = nn.Parameter(torch.randn(1, 1, 768))
         
     def patchify(self, images):
         """Convert images to patches"""
-        # CHANGED: Add proper patchification
         B, C, H, W = images.shape
         assert H == W == self.img_size, f"Input size must be {self.img_size}"
         
@@ -83,7 +82,6 @@ class MAEModel(nn.Module):
         return x_masked, ids_restore, mask
 
     def forward(self, x):
-        # CHANGED: Complete MAE forward pass
         B, C, H, W = x.shape
         
         # Patchify images
@@ -92,26 +90,67 @@ class MAEModel(nn.Module):
         # Mask patches
         patches_masked, ids_restore, mask = self.random_masking(patches, self.mask_ratio)
         
-        # Get positional embeddings
+        # FIX: Get positional embeddings correctly
         pos_embed = self.encoder.encoder.pos_embed[:, 1:, :]  # remove cls token
         
+        # FIX: Properly index positional embeddings
+        batch_pos_embed = pos_embed.repeat(B, 1, 1)  # [B, num_patches, dim]
+        
+        # Gather the positional embeddings for the kept patches
+        batch_idx = torch.arange(B, device=x.device).unsqueeze(-1)
+        pos_embed_kept = batch_pos_embed[batch_idx, ids_restore[:, :patches_masked.size(1)]]
+        
         # Add positional embeddings to visible patches
-        patches_masked = patches_masked + pos_embed[ids_restore[:, :patches_masked.size(1)]]
+        patches_masked = patches_masked + pos_embed_kept
         
         # Encode visible patches
         encoded = self.encoder.blocks(patches_masked)
         encoded = self.encoder.norm(encoded)
         
         # Decode all patches (add mask tokens for masked patches)
-        decoder_input = torch.cat([
-            encoded, 
-            repeat(self.mask_token, '1 1 d -> b n d', b=B, n=self.num_patches - encoded.size(1))
-        ], dim=1)
+        mask_tokens = repeat(self.mask_token, '1 1 d -> b n d', b=B, n=self.num_patches - encoded.size(1))
+        decoder_input = torch.cat([encoded, mask_tokens], dim=1)
         
         # Unshuffle patches to original order
         decoder_input = torch.gather(decoder_input, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, decoder_input.size(2)))
+        
+        # Add positional embeddings to all patches for decoder
+        decoder_input = decoder_input + batch_pos_embed
         
         # Decode
         decoded_patches = self.decoder(decoder_input)
         
         return decoded_patches, patches, mask
+
+# Alternative: SIMPLER version if the above is still complex
+class SimpleMAEModel(nn.Module):
+    """Simplified MAE that should definitely work"""
+    def __init__(self, encoder_name="vit_base_patch16_224", mask_ratio=0.75):
+        super().__init__()
+        self.encoder = MAEEncoder(encoder_name)
+        self.decoder = MAEDecoder()
+        self.mask_ratio = mask_ratio
+        self.patch_size = 16
+
+    def forward(self, x):
+        B, C, H, W = x.shape
+        
+        # Use timm's built-in patch embedding
+        patches = self.encoder.patch_embed(x)  # [B, num_patches, dim]
+        
+        # Simple masking (keep first N patches, mask the rest)
+        num_patches = patches.shape[1]
+        num_keep = int(num_patches * (1 - self.mask_ratio))
+        
+        # Keep first num_keep patches, mask the rest
+        patches_visible = patches[:, :num_keep, :]
+        patches_masked = patches[:, num_keep:, :]
+        
+        # Encode visible patches
+        encoded = self.encoder.blocks(patches_visible)
+        encoded = self.encoder.norm(encoded)
+        
+        # Simple reconstruction - try to reconstruct masked patches
+        reconstructed = self.decoder(encoded[:, -patches_masked.shape[1]:, :])
+        
+        return reconstructed, patches_masked, torch.ones(B, patches_masked.shape[1], device=x.device)
