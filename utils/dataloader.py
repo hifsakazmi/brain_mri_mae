@@ -45,15 +45,6 @@ def prepare_dataset1():
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(local_path)
         
-        # Check if extraction was successful
-        if not os.path.exists(training_path):
-            # Debug: see what was actually extracted
-            print("Contents of /content after extraction:")
-            for item in os.listdir(local_path):
-                print(f"  {item}")
-            raise FileNotFoundError(f"Extraction failed! training_images not found at {training_path}")
-        
-        # Optional: Remove the zip file to save space
         os.remove(zip_path)
         print("Dataset downloaded and extracted successfully!")
     else:

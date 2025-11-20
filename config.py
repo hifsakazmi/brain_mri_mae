@@ -5,7 +5,14 @@ VAL_DIR = "/content/val/"
 PRETRAIN_EPOCHS = 10
 FINETUNE_EPOCHS = 5
 
-MAE_SAVE_PATH = "mae_encoder.pth"
+#----------------------------
+# MAE Settings
+#----------------------------
+MAE_LEARNING_RATE = 1e-4
+MAE_BATCH_SIZE = 32
+MAE_EPOCHS = 100
+MAE_ENCODER_SAVE_PATH = "./models/mae_encoder.pth"
+MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
 
 # ---------------------------
 # Dataset 1: binary brain tumor
