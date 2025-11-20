@@ -5,10 +5,41 @@ from torchvision import transforms
 from datasets.mri_dataset import MRIDataset
 import config
 
-# For Kaggle download
 import kagglehub
+import gdown
 
 def prepare_dataset1():
+    """
+    Downloads and extracts the 2-class brain tumor dataset from Google Drive
+    if it hasn't been downloaded yet.
+    Returns local folder path containing the dataset.
+    """
+    local_path = "/content"  # This is where your files get extracted
+    
+    zip_path = "/content/images_binary.zip"
+    
+    if not os.path.exists("/content/training_images") or not os.path.exists("/content/testing_images"):
+        print("Downloading 2-class dataset from Google Drive...")
+        
+        # Install gdown if not already installed
+        try:
+            import gdown
+        except ImportError:
+            print("Installing gdown...")
+            os.system("pip install -U --no-cache-dir gdown --pre")
+            import gdown
+        
+        # Download the file
+        gdown.download(config.DATASET1_PATH, zip_path, quiet=False)
+        
+        # Extract the zip file
+        print("Extracting dataset...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(local_path)
+        
+        # Remove the zip file to save space
+        os.remove(zip_path)
+        print("Dataset downloaded and extracted successfully!")
     
     return local_path
 
@@ -40,13 +71,12 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     ])
 
     if dataset_name.lower() == "dataset1":
-        path = config.DATASET1_TRAIN_PATH if split=="train" else config.DATASET1_TEST_PATH
+        local_path = prepare_dataset1()
+        path = os.path.join(local_path, "Training") if split=="train" else os.path.join(local_path, "Testing")
         num_classes = config.DATASET1_NUM_CLASSES
 
     elif dataset_name.lower() == "dataset2":
         local_path = prepare_dataset2()
-        # Depending on how the Kaggle dataset is structured, adjust train/test split
-        # Here we assume all images in subfolders; you may want to add a split
         path = os.path.join(local_path, "Training") if split=="train" else os.path.join(local_path, "Testing")
         num_classes = config.DATASET2_NUM_CLASSES
 

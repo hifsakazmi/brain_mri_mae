@@ -11,8 +11,7 @@ MAE_SAVE_PATH = "mae_encoder.pth"
 # Dataset 1: binary brain tumor
 # ---------------------------
 DATASET1_NAME = "binary_brain_tumor"
-DATASET1_TRAIN_PATH = "/content/training_images"
-DATASET1_TEST_PATH = "/content/testing_images"
+DATASET1_PATH = "https://drive.google.com/uc?id=1RK-qLscrh8WirgwSxOcTbq5_3F3UcpTa"
 DATASET1_NUM_CLASSES = 2
 
 # ---------------------------
