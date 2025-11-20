@@ -52,11 +52,6 @@ def pretrain(cfg):
             # Get all three returns from MAE model
             decoded_patches, original_patches, mask = model(imgs)
             
-            # DEBUG: Print shapes to see the issue
-            print(f"DEBUG - decoded_patches shape: {decoded_patches.shape}")
-            print(f"DEBUG - original_patches shape: {original_patches.shape}") 
-            print(f"DEBUG - mask shape: {mask.shape}")
-            
             # Apply mask to focus loss only on reconstructed (masked) patches
             loss = (decoded_patches - original_patches) ** 2
             loss = loss.mean(dim=-1)  # Mean over patch dimensions
