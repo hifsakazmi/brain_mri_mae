@@ -50,6 +50,6 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     else:
         raise ValueError(f"Unknown dataset {dataset_name}")
 
-    dataset = MRIDataset(path, img_size=img_size)
+    dataset = MRIDataset(path)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=(split=="train"), num_workers=num_workers)
     return loader, num_classes
