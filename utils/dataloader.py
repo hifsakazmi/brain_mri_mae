@@ -7,6 +7,10 @@ import config
 # For Kaggle download
 import kagglehub
 
+def prepare_dataset1():
+    
+    return local_path
+
 def prepare_dataset2():
     """
     Downloads and extracts the 4-class Kaggle brain tumor dataset
@@ -17,14 +21,7 @@ def prepare_dataset2():
     if not os.path.exists(local_path):
         os.makedirs(local_path, exist_ok=True)
         print("Downloading 4-class Kaggle dataset...")
-        kagglehub.dataset_download(config.DATASET2_KAGGLE_PATH, local_path)
-        # Assuming dataset is zipped
-        for fname in os.listdir(local_path):
-            if fname.endswith(".zip"):
-                zip_path = os.path.join(local_path, fname)
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                    zip_ref.extractall(local_path)
-                os.remove(zip_path)
+        kagglehub.dataset_download(config.DATASET2_KAGGLE_PATH, localpath)
     return local_path
 
 
