@@ -14,7 +14,7 @@ import seaborn as sns
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.classifier import MAEClassifier, SimpleMAEClassifier
+from models.classifier import MAEClassifier
 from utils.dataloader import get_dataloader
 import config
 
