@@ -41,7 +41,7 @@ def pretrain(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    model = ProperMAE(
+    model = MAEModel(
         img_size=cfg.MAE_IMG_SIZE,
         patch_size=cfg.MAE_PATCH_SIZE,
         encoder_dim=cfg.MAE_ENCODER_DIM,
