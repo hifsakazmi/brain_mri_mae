@@ -122,35 +122,60 @@ class MAEModel(nn.Module):
         
         return decoded_patches, patches, mask
 
-# Alternative: SIMPLER version if the above is still complex
 class SimpleMAEModel(nn.Module):
     """Simplified MAE that should definitely work"""
-    def __init__(self, encoder_name="vit_base_patch16_224", mask_ratio=0.75):
+    def __init__(self, encoder_name="vit_base_patch16_224", mask_ratio=0.75, img_size=224):
         super().__init__()
         self.encoder = MAEEncoder(encoder_name)
-        self.decoder = MAEDecoder()
-        self.mask_ratio = mask_ratio
         self.patch_size = 16
+        self.mask_ratio = mask_ratio
+        self.img_size = img_size
+        self.num_patches = (img_size // self.patch_size) ** 2
+        
+        # Simple decoder that matches the patch dimensions
+        self.decoder = nn.Sequential(
+            nn.Linear(768, 512),
+            nn.GELU(),
+            nn.Linear(512, self.patch_size * self.patch_size * 3)  # Output: patch pixels
+        )
+
+    def patchify(self, images):
+        """Convert images to patches - same as before"""
+        B, C, H, W = images.shape
+        patches = images.unfold(2, self.patch_size, self.patch_size).unfold(3, self.patch_size, self.patch_size)
+        patches = patches.contiguous().view(B, C, -1, self.patch_size, self.patch_size)
+        patches = patches.permute(0, 2, 3, 4, 1).contiguous().view(B, -1, C * self.patch_size * self.patch_size)
+        return patches
 
     def forward(self, x):
         B, C, H, W = x.shape
         
-        # Use timm's built-in patch embedding
-        patches = self.encoder.patch_embed(x)  # [B, num_patches, dim]
-        
-        # Simple masking (keep first N patches, mask the rest)
-        num_patches = patches.shape[1]
+        # Get all patches
+        all_patches = self.patchify(x)  # [B, num_patches, patch_dim]
+        num_patches = all_patches.shape[1]
         num_keep = int(num_patches * (1 - self.mask_ratio))
+        num_mask = num_patches - num_keep
         
         # Keep first num_keep patches, mask the rest
-        patches_visible = patches[:, :num_keep, :]
-        patches_masked = patches[:, num_keep:, :]
+        patches_visible = all_patches[:, :num_keep, :]  # Visible patches
+        patches_masked = all_patches[:, num_keep:, :]   # Masked patches (target for reconstruction)
         
-        # Encode visible patches
-        encoded = self.encoder.blocks(patches_visible)
+        # Encode visible patches using a simple projection + MLP instead of full ViT
+        # This avoids the complex positional embedding issues
+        encoded = nn.Linear(patches_visible.shape[-1], 768).to(x.device)(patches_visible)  # Project to encoder dim
+        encoded = self.encoder.blocks(encoded)  # Pass through transformer blocks
         encoded = self.encoder.norm(encoded)
         
-        # Simple reconstruction - try to reconstruct masked patches
-        reconstructed = self.decoder(encoded[:, -patches_masked.shape[1]:, :])
+        # Take the last part of encoded to reconstruct masked patches
+        # We assume the encoder has learned to "predict" masked patches from context
+        encoded_for_masked = encoded[:, -num_mask:, :] if encoded.shape[1] > num_mask else encoded
+        
+        # Reconstruct masked patches
+        reconstructed = self.decoder(encoded_for_masked)
+        
+        # Ensure shapes match
+        if reconstructed.shape[1] != patches_masked.shape[1]:
+            # If shapes don't match, interpolate or pad
+            reconstructed = reconstructed[:, :patches_masked.shape[1], :]
         
         return reconstructed, patches_masked, torch.ones(B, patches_masked.shape[1], device=x.device)
