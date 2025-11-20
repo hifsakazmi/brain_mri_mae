@@ -90,7 +90,7 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
 
     if dataset_name.lower() == "dataset1":
         local_path = prepare_dataset1()
-        path = os.path.join(local_path, "Training") if split=="train" else os.path.join(local_path, "Testing")
+        path = os.path.join(local_path, "training_images") if split=="train" else os.path.join(local_path, "testing_images")
         num_classes = config.DATASET1_NUM_CLASSES
 
     elif dataset_name.lower() == "dataset2":
