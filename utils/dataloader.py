@@ -29,7 +29,6 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     """
     Returns a DataLoader for the requested dataset and split.
     """
-    os.environ['KAGGLEHUB_CACHE'] = config.KAGGLEHUB_CACHE
     batch_size = batch_size or config.BATCH_SIZE
     num_workers = num_workers or config.NUM_WORKERS
     img_size = img_size or config.IMG_SIZE
