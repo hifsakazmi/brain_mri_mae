@@ -345,7 +345,7 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     # Use the encoder from the MAE model
     encoder = mae_model.encoder
     classifier = MAEClassifier(
-        encoder, 
+        model, 
         num_classes,
         img_size=cfg.MAE_IMG_SIZE,
         patch_size=cfg.MAE_PATCH_SIZE,
