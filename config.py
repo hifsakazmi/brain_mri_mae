@@ -36,7 +36,7 @@ AUGMENTATION = True
 #----------------------------
 # Selected Dataset
 #----------------------------
-DATASET = "dataset2"
+DATASET = "dataset1"
 # ---------------------------
 # Dataset 1: binary brain tumor
 # ---------------------------
