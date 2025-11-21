@@ -73,11 +73,24 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
     num_workers = num_workers or config.NUM_WORKERS
     img_size = img_size or config.IMG_SIZE
 
-    # Define transform that converts images to tensors
-    transform = transforms.Compose([
-        transforms.Resize((img_size, img_size)),
-        transforms.ToTensor(),
-    ])
+    # Enhanced transforms with augmentation for training
+    if split == "train":
+        transform = transforms.Compose([
+            transforms.Resize((img_size, img_size)),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomRotation(10),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                               std=[0.229, 0.224, 0.225])
+        ])
+    else:
+        transform = transforms.Compose([
+            transforms.Resize((img_size, img_size)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                               std=[0.229, 0.224, 0.225])
+        ])
 
     if dataset_name.lower() == "dataset1":
         local_path = prepare_dataset1()
