@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import timm
 from einops import rearrange, repeat
 import math
 

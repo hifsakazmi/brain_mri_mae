@@ -20,6 +20,8 @@ MAE_DECODER_DIM = 512
 MAE_DECODER_DEPTH = 8
 MAE_DECODER_HEADS = 16
 MAE_MASK_RATIO = 0.75
+MAE_ENCODER_SAVE_PATH = "./models/mae_encoder.pth"
+MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
 
 #------------------------------
 # Classifier Settings
