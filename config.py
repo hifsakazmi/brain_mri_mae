@@ -8,9 +8,9 @@ FINETUNE_EPOCHS = 5
 #----------------------------
 # MAE Settings
 #----------------------------
-MAE_LEARNING_RATE = 1e-4
+MAE_LEARNING_RATE = 5e-5
 MAE_BATCH_SIZE = 32
-MAE_EPOCHS = 100
+MAE_EPOCHS = 10
 MAE_IMG_SIZE = 224
 MAE_PATCH_SIZE = 16
 MAE_ENCODER_DIM = 768
