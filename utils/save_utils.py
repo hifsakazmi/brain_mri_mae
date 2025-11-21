@@ -76,3 +76,14 @@ def save_best_models(encoder, full_model, model_name, local_encoder_path, local_
         print("❌ Full model is None, skipping save")
     
     return encoder_saved and full_saved
+
+def save_classifier_to_drive(classifier, drive_path="/content/drive/MyDrive/brain_mri_mae/models/classifier.pth"):
+    """Save classifier to Google Drive"""
+    try:
+        os.makedirs(os.path.dirname(drive_path), exist_ok=True)
+        torch.save(classifier.state_dict(), drive_path)
+        print(f"✅ Classifier saved to Google Drive: {drive_path}")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to save classifier to Drive: {e}")
+        return False

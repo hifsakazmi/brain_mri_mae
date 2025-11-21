@@ -10,9 +10,7 @@ FINETUNE_EPOCHS = 5
 #----------------------------
 MAE_LEARNING_RATE = 1e-4
 MAE_BATCH_SIZE = 32
-MAE_EPOCHS = 50
-MAE_ENCODER_SAVE_PATH = "./models/mae_encoder.pth"
-MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
+MAE_EPOCHS = 100
 MAE_IMG_SIZE = 224
 MAE_PATCH_SIZE = 16
 MAE_ENCODER_DIM = 768
@@ -21,16 +19,17 @@ MAE_ENCODER_HEADS = 12
 MAE_DECODER_DIM = 512
 MAE_DECODER_DEPTH = 8
 MAE_DECODER_HEADS = 16
-MAE_MASK_RATIO = 0.85
+MAE_MASK_RATIO = 0.75
 
 #------------------------------
 # Classifier Settings
 #------------------------------ 
-CLASSIFIER_LEARNING_RATE = 1e-4
+CLASSIFIER_LEARNING_RATE = 5e-5
 CLASSIFIER_BATCH_SIZE = 32
-CLASSIFIER_EPOCHS = 50
-CLASSIFIER_WEIGHT_DECAY = 0.05
+CLASSIFIER_EPOCHS = 100
+CLASSIFIER_WEIGHT_DECAY = 0.01
 CLASSIFIER_SAVE_PATH = "./models/classifier.pth"
+AUGMENTATION = True
 
 #----------------------------
 # Selected Dataset

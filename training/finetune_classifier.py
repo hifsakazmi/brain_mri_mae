@@ -356,17 +356,39 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     
     classifier = classifier.to(device)
     
-    # Loss and optimizer
+    # Loss function
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(
-        classifier.parameters(),
-        lr=cfg.CLASSIFIER_LEARNING_RATE,
-        weight_decay=cfg.CLASSIFIER_WEIGHT_DECAY
-    )
     
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+    # Enhanced fine-tuning: Differential learning rates
+    no_decay = ['bias', 'LayerNorm.weight']
+    optimizer_grouped_parameters = [
+        {
+            'params': [p for n, p in classifier.named_parameters() 
+                      if not any(nd in n for nd in no_decay) and 'classifier' not in n],
+            'weight_decay': cfg.CLASSIFIER_WEIGHT_DECAY,
+            'lr': cfg.CLASSIFIER_LEARNING_RATE * 0.1  # Lower LR for backbone
+        },
+        {
+            'params': [p for n, p in classifier.named_parameters() 
+                      if any(nd in n for nd in no_decay) and 'classifier' not in n],
+            'weight_decay': 0.0,
+            'lr': cfg.CLASSIFIER_LEARNING_RATE * 0.1
+        },
+        {
+            'params': [p for n, p in classifier.named_parameters() if 'classifier' in n],
+            'weight_decay': cfg.CLASSIFIER_WEIGHT_DECAY,
+            'lr': cfg.CLASSIFIER_LEARNING_RATE  # Higher LR for classifier head
+        },
+    ]
+    
+    optimizer = optim.AdamW(optimizer_grouped_parameters)
+    
+    # Use cosine annealing with warmup
+    scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(
         optimizer, 
-        T_max=cfg.CLASSIFIER_EPOCHS
+        T_0=10,  # Restart every 10 epochs
+        T_mult=2,
+        eta_min=1e-6
     )
     
     # Training history
@@ -412,6 +434,11 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
         if val_metrics["accuracy"] > best_val_acc:
             best_val_acc = val_metrics["accuracy"]
             torch.save(classifier.state_dict(), cfg.CLASSIFIER_SAVE_PATH)
+
+            # Save to Drive
+            from utils.save_utils import save_classifier_to_drive
+            save_classifier_to_drive(classifier)
+
             print(f'  ✅ New best model saved! Val Acc: {val_metrics["accuracy"]:.4f}')
         
         print('-' * 80)

@@ -79,6 +79,20 @@ class MAEModel(nn.Module):
         
         # Initialize patch embedding
         nn.init.xavier_uniform_(self.patch_embed.weight)
+        if self.patch_embed.bias is not None:
+            nn.init.constant_(self.patch_embed.bias, 0)
+            
+        # Initialize linear layers
+        self.apply(self._init_weights)
+    
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
         
     def random_masking(self, x, mask_ratio):
         """Randomly mask patches"""
