@@ -28,7 +28,7 @@ MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
 #------------------------------ 
 CLASSIFIER_LEARNING_RATE = 5e-5
 CLASSIFIER_BATCH_SIZE = 32
-CLASSIFIER_EPOCHS = 20
+CLASSIFIER_EPOCHS = 30
 CLASSIFIER_WEIGHT_DECAY = 0.01
 CLASSIFIER_SAVE_PATH = "./models/classifier.pth"
 AUGMENTATION = True
@@ -36,7 +36,7 @@ AUGMENTATION = True
 #----------------------------
 # Selected Dataset
 #----------------------------
-DATASET = "dataset1"
+DATASET = "dataset2"
 # ---------------------------
 # Dataset 1: binary brain tumor
 # ---------------------------
