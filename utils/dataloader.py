@@ -75,7 +75,7 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
 
     # Enhanced transforms with augmentation for training
     if split == "train":
-    transform = transforms.Compose([
+        transform = transforms.Compose([
         transforms.Resize((img_size, img_size)),
         transforms.RandomHorizontalFlip(p=0.5),  # Only safe augmentation
         transforms.ToTensor(),
