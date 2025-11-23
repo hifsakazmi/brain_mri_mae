@@ -58,7 +58,7 @@ def prepare_dataset2():
     if it hasn't been downloaded yet.
     Returns local folder path containing the dataset.
     """
-    local_path = "/kaggle/input/brain-tumor-classification-mri"
+    local_path = f"/kaggle/input/{config.DATASET2_NAME}"
     if not os.path.exists(local_path):
         print("Downloading 4-class Kaggle dataset...")
         localpath = kagglehub.dataset_download(config.DATASET2_KAGGLE_PATH)
