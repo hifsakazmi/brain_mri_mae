@@ -15,6 +15,7 @@ class MAEModel(nn.Module):
                  mask_ratio=0.75):
         super().__init__()
         
+        self.decoder_dim = decoder_dim
         self.img_size = img_size
         self.patch_size = patch_size
         self.mask_ratio = mask_ratio
