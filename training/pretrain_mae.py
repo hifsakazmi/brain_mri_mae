@@ -31,7 +31,7 @@ def validate_mae(model, cfg, device):
             # Same loss calculation as training
             loss = (decoded_patches - original_patches) ** 2
             loss = loss.mean(dim=-1)
-            loss = (loss * mask).sum() / mask.sum()
+            loss = (loss * mask).sum() / (mask.sum() + 1e-5) 
             
             total_loss += loss.item()
             num_batches += 1
@@ -146,8 +146,8 @@ def pretrain(cfg):
             original_pixel_patches = model.get_pixel_patches(imgs)  
             
             loss = (decoded_patches - original_pixel_patches) ** 2
-            loss = loss.mean(dim=-1)
-            loss = (loss * mask).sum() / mask.sum()
+            loss = loss.mean(dim=-1)  # [B, N] - mean over patch dimensions
+            loss = (loss * mask).sum() / (mask.sum() + 1e-5)  # Only masked patches
             
             optimizer.zero_grad()
             loss.backward()

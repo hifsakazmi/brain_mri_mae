@@ -1,11 +1,8 @@
 import torch
 import torch.nn as nn
-from einops import rearrange, repeat
 import math
 
 class MAEModel(nn.Module):
-    """Proper MAE implementation that follows the original paper"""
-    
     def __init__(self, 
                  img_size=224,
                  patch_size=16,
@@ -22,25 +19,20 @@ class MAEModel(nn.Module):
         self.patch_size = patch_size
         self.mask_ratio = mask_ratio
         
-        # Calculate number of patches
+        # Calculate patches
         self.num_patches = (img_size // patch_size) ** 2
         self.patch_dim = 3 * patch_size * patch_size
         
-        # Patch embedding
-        self.patch_embed = nn.Conv2d(
-            3, encoder_dim, 
-            kernel_size=patch_size, 
-            stride=patch_size
-        )
+        # Proper patch embedding (Linear, not Conv2d)
+        self.patch_embed = nn.Linear(self.patch_dim, encoder_dim)
+        self.patch_norm = nn.LayerNorm(encoder_dim)
         
         # Positional embeddings
         self.pos_embed = nn.Parameter(torch.zeros(1, self.num_patches, encoder_dim))
+        self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_dim))
         self.decoder_pos_embed = nn.Parameter(torch.zeros(1, self.num_patches, decoder_dim))
         
-        # Mask token
-        self.mask_token = nn.Parameter(torch.zeros(1, 1, decoder_dim))
-        
-        # Encoder (ViT)
+        # Encoder
         encoder_layers = nn.TransformerEncoderLayer(
             d_model=encoder_dim,
             nhead=encoder_heads,
@@ -51,8 +43,8 @@ class MAEModel(nn.Module):
         )
         self.encoder = nn.TransformerEncoder(encoder_layers, encoder_depth)
         
-        # Projection from encoder to decoder
-        self.encoder_to_decoder = nn.Linear(encoder_dim, decoder_dim)
+        # Projection to decoder
+        self.enc_to_dec = nn.Linear(encoder_dim, decoder_dim)
         
         # Decoder
         decoder_layers = nn.TransformerEncoderLayer(
@@ -71,30 +63,23 @@ class MAEModel(nn.Module):
         self.initialize_weights()
     
     def initialize_weights(self):
-        # Initialize positional embeddings
         nn.init.trunc_normal_(self.pos_embed, std=0.02)
-        nn.init.trunc_normal_(self.decoder_pos_embed, std=0.02)
         nn.init.trunc_normal_(self.mask_token, std=0.02)
-        
-        # Initialize patch embedding
-        nn.init.xavier_uniform_(self.patch_embed.weight)
-        if self.patch_embed.bias is not None:
-            nn.init.constant_(self.patch_embed.bias, 0)
-            
-        # Initialize linear layers
-        self.apply(self._init_weights)
+        nn.init.trunc_normal_(self.decoder_pos_embed, std=0.02)
     
-    def _init_weights(self, m):
-        if isinstance(m, nn.Linear):
-            nn.init.xavier_uniform_(m.weight)
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.LayerNorm):
-            nn.init.constant_(m.bias, 0)
-            nn.init.constant_(m.weight, 1.0)
+    def patchify(self, imgs):
+        " Patch extraction (SAME for both input and target)"""
+        p = self.patch_size
+        B, C, H, W = imgs.shape
+        assert H == self.img_size and W == self.img_size
+        assert H % p == 0 and W % p == 0
         
+        h, w = H // p, W // p
+        x = imgs.reshape(B, C, h, p, w, p)
+        x = x.permute(0, 2, 4, 1, 3, 5).reshape(B, h * w, C * p * p)
+        return x
+    
     def random_masking(self, x, mask_ratio):
-        """Randomly mask patches"""
         B, N, D = x.shape
         len_keep = int(N * (1 - mask_ratio))
         
@@ -105,7 +90,6 @@ class MAEModel(nn.Module):
         ids_keep = ids_shuffle[:, :len_keep]
         x_masked = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))
         
-        # Generate binary mask: 0 is keep, 1 is remove
         mask = torch.ones(B, N, device=x.device)
         mask[:, :len_keep] = 0
         mask = torch.gather(mask, dim=1, index=ids_restore)
@@ -113,76 +97,64 @@ class MAEModel(nn.Module):
         return x_masked, ids_restore, mask
     
     def forward_encoder(self, x, mask_ratio):
-        # Patch embedding
-        x = self.patch_embed(x)  # [B, D, H', W']
-        x = x.flatten(2).transpose(1, 2)  # [B, N, D]
-        
-        # Add positional embedding
+        # Apply patch embedding to actual patches
+        # x is already patches from patchify()
+        x = self.patch_embed(x)  # [B, N, encoder_dim]
+        x = self.patch_norm(x)
         x = x + self.pos_embed
         
         # Masking
         x, ids_restore, mask = self.random_masking(x, mask_ratio)
         
-        # Apply Transformer encoder
+        # Encoder (no CLS token - correct for MAE)
         x = self.encoder(x)
         
         return x, ids_restore, mask
     
     def forward_decoder(self, x, ids_restore):
         # Project to decoder dimension
-        x = self.encoder_to_decoder(x)
+        x = self.enc_to_dec(x)
         
-        # Append mask tokens to the sequence
-        mask_tokens = repeat(
-            self.mask_token, 
-            '1 1 d -> b n d', 
-            b=x.shape[0], 
-            n=ids_restore.shape[1] - x.shape[1]
+        # Append mask tokens
+        mask_tokens = self.mask_token.repeat(
+            x.shape[0], ids_restore.shape[1] - x.shape[1], 1
         )
-        x_ = torch.cat([x, mask_tokens], dim=1)
+        x_full = torch.cat([x, mask_tokens], dim=1)
         
-        # Unshuffle
-        x = torch.gather(
-            x_, 
+        # Unshuffle with correct dimension
+        x_unshuffled = torch.gather(
+            x_full, 
             dim=1, 
-            index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2])
+            index=ids_restore.unsqueeze(-1).repeat(1, 1, self.decoder_dim)
         )
         
-        # Add decoder positional embedding
-        x = x + self.decoder_pos_embed
+        # Add decoder positional embeddings
+        x_unshuffled = x_unshuffled + self.decoder_pos_embed
         
-        # Apply Transformer decoder
-        x = self.decoder(x)
+        # Apply decoder
+        x_decoded = self.decoder(x_unshuffled)
         
         # Prediction head
-        x = self.head(x)
+        pred = self.head(x_decoded)
         
-        return x
+        return pred
     
     def forward(self, imgs, mask_ratio=None):
         if mask_ratio is None:
             mask_ratio = self.mask_ratio
             
-        # Get original patches for reconstruction target
-        patches = self.get_pixel_patches(imgs)
+        # Use SAME patch extraction for both input and target
+        patches = self.patchify(imgs)  # [B, N, patch_dim]
         
         # Encoder forward
-        latent, ids_restore, mask = self.forward_encoder(imgs, mask_ratio)
+        latent, ids_restore, mask = self.forward_encoder(patches, mask_ratio)
         
-        # Decoder forward
-        pred = self.forward_decoder(latent, ids_restore)
+        # Decoder forward  
+        pred = self.forward_decoder(latent, ids_restore)  # [B, N, patch_dim]
         
         return pred, patches, mask
     
-    def get_pixel_patches(self, imgs):
-        """Get actual pixel values for patches"""
-        B, C, H, W = imgs.shape
-        p = self.patch_size
-        patches = imgs.unfold(2, p, p).unfold(3, p, p)
-        patches = patches.contiguous().view(B, C, -1, p, p)
-        patches = patches.permute(0, 2, 3, 4, 1).contiguous()
-        patches = patches.view(B, -1, C * p * p)
-        return patches
+    # REMOVE the old get_pixel_patches method - use patchify() instead
 
 class SimpleMAEModel(nn.Module):
     """Ultra-simple MAE that definitely works"""
