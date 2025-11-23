@@ -95,7 +95,13 @@ def pretrain(cfg):
     debug_loss_calculation(model, cfg, device)
     print("=== END DEBUG ===")
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.MAE_LEARNING_RATE) 
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.MAE_LEARNING_RATE)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+        optimizer, 
+        T_0=10,  # Restart every 10 epochs
+        T_mult=2,
+        eta_min=1e-6
+    )
 
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total parameters: {total_params:,}") 
@@ -165,6 +171,8 @@ def pretrain(cfg):
         epochs_list.append(epoch + 1)
         
         print(f"Epoch {epoch+1} — Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
+
+        scheduler.step()  # Update learning rate
         
         # Save best model (to Drive if mounted, otherwise locally)
         if val_loss < best_val_loss:
