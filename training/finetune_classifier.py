@@ -243,6 +243,16 @@ def train_epoch(model, train_loader, criterion, optimizer, device, num_classes):
         outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
+        # DEBUG: ADD GRADIENT HERE (first batch only)
+        if batch_idx == 0:
+            print("=== GRADIENT CHECK ===")
+            for name, param in model.named_parameters():
+                if param.grad is not None:
+                    print(f"{name}: grad norm = {param.grad.norm().item():.6f}")
+                else:
+                    print(f"{name}: NO GRADIENT")
+            print("======================")
+        
         optimizer.step()
         
         running_loss += loss.item()
@@ -363,7 +373,7 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     if dataset_name == "dataset2":
         # Apply class weights for 4-class imbalance
         # Weights computed with inverse frequency
-        class_weights = torch.tensor([1.63, 0.91, 0.87, 0.88])
+        class_weights = torch.tensor([1.63, 0.91, 0.87, 0.88]).to(device)
         criterion = nn.CrossEntropyLoss(class_weights)
     else:
         criterion = nn.CrossEntropyLoss()
