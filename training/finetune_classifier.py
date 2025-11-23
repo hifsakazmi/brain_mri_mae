@@ -243,6 +243,8 @@ def train_epoch(model, train_loader, criterion, optimizer, device, num_classes):
         outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
+        # Add gradient clipping
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         # DEBUG: ADD GRADIENT HERE (first batch only)
         if batch_idx == 0:
             print("=== GRADIENT CHECK ===")

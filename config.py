@@ -26,7 +26,7 @@ MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
 #------------------------------
 # Classifier Settings
 #------------------------------ 
-CLASSIFIER_LEARNING_RATE = 5e-5
+CLASSIFIER_LEARNING_RATE = 1e-5
 CLASSIFIER_BATCH_SIZE = 32
 CLASSIFIER_EPOCHS = 40
 CLASSIFIER_WEIGHT_DECAY = 0.01
