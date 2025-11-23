@@ -143,7 +143,6 @@ def pretrain(cfg):
         for batch_idx, (imgs, _) in enumerate(train_loader):  
             imgs = imgs.to(device)
             decoded_patches, _, mask = model(imgs)
-            original_pixel_patches = model.get_pixel_patches(imgs)  
             
             loss = (decoded_patches - original_pixel_patches) ** 2
             loss = loss.mean(dim=-1)  # [B, N] - mean over patch dimensions
