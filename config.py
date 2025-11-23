@@ -48,7 +48,8 @@ DATASET1_NUM_CLASSES = 2
 # Dataset 2: 4-class brain tumor
 # ---------------------------
 DATASET2_NAME = "4class_brain_tumor"
-DATASET2_KAGGLE_PATH = "sartajbhuvaji/brain-tumor-classification-mri"
+#DATASET2_KAGGLE_PATH = "sartajbhuvaji/brain-tumor-classification-mri"
+DATASET2_KAGGLE_PATH = "masoudnickparvar/brain-tumor-mri-datase"
 DATASET2_NUM_CLASSES = 4
  
 # ---------------------------
