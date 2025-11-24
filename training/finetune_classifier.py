@@ -356,12 +356,23 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     
     # Use the encoder from the MAE model
     classifier = MAEClassifier(
-        mae_model,  # Pass full model, not mae_model.encoder
+        mae_model.encoder,  
         num_classes,
         img_size=cfg.MAE_IMG_SIZE,
         patch_size=cfg.MAE_PATCH_SIZE,
         encoder_dim=cfg.MAE_ENCODER_DIM
     )
+
+    # Manually ensure patch embedding is correct
+    classifier.patch_embed = nn.Conv2d(
+        3, cfg.MAE_ENCODER_DIM,
+        kernel_size=cfg.MAE_PATCH_SIZE, 
+        stride=cfg.MAE_PATCH_SIZE
+    )
+
+    # Copy positional embedding if needed
+    if hasattr(mae_model, 'pos_embed'):
+        classifier.pos_embed = mae_model.pos_embed
     
     print(f"✅ Classifier created {'with pre-trained weights' if checkpoint_loaded else 'with random initialization'}")
     
