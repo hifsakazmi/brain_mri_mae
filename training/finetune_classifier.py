@@ -366,6 +366,11 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     print(f"✅ Classifier created {'with pre-trained weights' if checkpoint_loaded else 'with random initialization'}")
     
     classifier = classifier.to(device)
+
+    print("=== MODEL STRUCTURE DEBUG ===")
+    print(f"Input shape: {cfg.MAE_IMG_SIZE}x{cfg.MAE_IMG_SIZE}")
+    print(f"Patch embed weight shape: {classifier.patch_embed[0].weight.shape if isinstance(classifier.patch_embed, nn.Sequential) else classifier.patch_embed.weight.shape}")
+    print("=============================")
     
     # Loss function
     if dataset_name == "dataset2":
