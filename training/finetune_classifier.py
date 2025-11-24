@@ -355,17 +355,13 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
         print("⚠️  No checkpoint found, using random initialization")
     
     # Use the encoder from the MAE model
-    encoder = mae_model.encoder
     classifier = MAEClassifier(
-        encoder, 
+        mae_model,  # Pass full model, not mae_model.encoder
         num_classes,
         img_size=cfg.MAE_IMG_SIZE,
         patch_size=cfg.MAE_PATCH_SIZE,
         encoder_dim=cfg.MAE_ENCODER_DIM
     )
-
-    classifier.patch_embed = mae_model.patch_embed
-    classifier.pos_embed = mae_model.pos_embed
     
     print(f"✅ Classifier created {'with pre-trained weights' if checkpoint_loaded else 'with random initialization'}")
     
