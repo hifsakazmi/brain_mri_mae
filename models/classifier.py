@@ -28,6 +28,8 @@ class MAEClassifier(nn.Module):
             self.encoder_layers = encoder
         
         self.use_cls_token = use_cls_token
+        self.encoder_dim = encoder_dim
+        
         if use_cls_token:
             self.cls_token = nn.Parameter(torch.zeros(1, 1, encoder_dim))
             nn.init.trunc_normal_(self.cls_token, std=0.02)
@@ -43,20 +45,42 @@ class MAEClassifier(nn.Module):
         
     def forward(self, x):
         # Patch embedding
-        x = self.patch_embed(x)
-        x = x.flatten(2).transpose(1, 2)
-        x = x + self.pos_embed
+        x = self.patch_embed(x)  # [B, D, H', W']
+        x = x.flatten(2).transpose(1, 2)  # [B, N, D]
         
+        # Add positional embedding
+        B, N, D = x.shape
+        
+        # Handle positional embedding size mismatch
+        if self.pos_embed.shape[1] != N:
+            # This can happen if image size doesn't match expected size
+            # Interpolate the positional embedding
+            pos_embed = F.interpolate(
+                self.pos_embed.transpose(1, 2), 
+                size=N, 
+                mode='linear',
+                align_corners=False
+            ).transpose(1, 2)
+            x = x + pos_embed
+        else:
+            x = x + self.pos_embed
+        
+        # Add CLS token if using
         if self.use_cls_token:
-            cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
+            cls_tokens = self.cls_token.expand(B, -1, -1)
             x = torch.cat((cls_tokens, x), dim=1)
         
         # Pass through encoder layers
-        x = self.encoder_layers(x)
-        
-        if self.use_cls_token:
-            x = x[:, 0]
+        if isinstance(self.encoder_layers, nn.TransformerEncoder):
+            x = self.encoder_layers(x)
         else:
-            x = x.mean(dim=1)
+            # If it's a custom encoder, make sure it expects the right input
+            x = self.encoder_layers(x)
+        
+        # Classification token or global average pooling
+        if self.use_cls_token:
+            x = x[:, 0]  # CLS token
+        else:
+            x = x.mean(dim=1)  # Global average pooling
             
         return self.classifier(x)
