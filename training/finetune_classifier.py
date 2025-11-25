@@ -388,7 +388,7 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
         # Apply class weights for 4-class imbalance
         # Weights computed with inverse frequency
         class_weights = torch.tensor([1.63, 0.91, 0.87, 0.88]).to(device)
-        criterion = nn.CrossEntropyLoss(class_weights)
+        criterion = nn.CrossEntropyLoss()
     else:
         criterion = nn.CrossEntropyLoss()
     
