@@ -122,10 +122,12 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
         )
 
         if split == "train":
+            train_dataset.class_names = dataset.class_names  
             loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-            print(f"✅ Train dataset: {len(train_dataset)} samples (80% of training data)")
+            print(f"Train dataset: {len(train_dataset)} samples (80% of training data)")
         else:  # val
+            val_dataset.class_names = dataset.class_names
             loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-            print(f"✅ Validation dataset: {len(val_dataset)} samples (20% of training data)")
+            print(f"Validation dataset: {len(val_dataset)} samples (20% of training data)")
 
     return loader, num_classes
