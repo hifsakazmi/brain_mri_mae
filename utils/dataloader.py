@@ -1,5 +1,6 @@
 import os
 import zipfile
+import torch
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from datasets.mri_dataset import MRIDataset
@@ -119,7 +120,7 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
             [train_size, val_size],
             generator=torch.Generator().manual_seed(42)  # For reproducibility
         )
-        
+
         if split == "train":
             loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
             print(f"✅ Train dataset: {len(train_dataset)} samples (80% of training data)")
