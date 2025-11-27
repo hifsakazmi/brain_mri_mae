@@ -43,7 +43,7 @@ def get_latest_drive_checkpoint(drive_path="/content/drive/MyDrive/brain_mri_mae
 
 def load_pretrained_encoder(cfg, pretrained_path):
     """Load pre-trained MAE encoder from checkpoint"""
-    from models.vit_mae import MAEModel, SimpleMAEModel
+    from models.vit_mae import MAEModel
     
     try:
         print("🔄 Trying to load as ProperMAE...")
@@ -72,22 +72,7 @@ def load_pretrained_encoder(cfg, pretrained_path):
         
     except Exception as e:
         print(f"❌ Failed to load as ProperMAE: {e}")
-        
-        try:
-            print("🔄 Trying to load as SimpleMAE...")
-            mae_model = SimpleMAEModel(
-                mask_ratio=cfg.MAE_MASK_RATIO,
-                img_size=cfg.MAE_IMG_SIZE
-            )
-            checkpoint = torch.load(pretrained_path, map_location='cpu')
-            mae_model.load_state_dict(checkpoint)
-            encoder = mae_model.encoder
-            print("✅ Loaded SimpleMAE encoder")
-            return encoder, "simple"
-            
-        except Exception as e2:
-            print(f"❌ Failed to load as SimpleMAE: {e2}")
-            return None, "none"
+
 
 def compute_metrics(model, data_loader, device, num_classes):
     """Compute comprehensive metrics including AUC-ROC"""

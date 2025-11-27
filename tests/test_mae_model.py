@@ -7,7 +7,7 @@ import os
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.vit_mae import MAEModel, SimpleMAEModel
+from models.vit_mae import MAEModel
 from utils.dataloader import get_dataloader
 import config
 
@@ -60,11 +60,6 @@ def test_simple_mae_forward():
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    model = SimpleMAEModel(
-        mask_ratio=config.MAE_MASK_RATIO,
-        img_size=config.MAE_IMG_SIZE
-    ).to(device)
-    
     dummy_imgs = torch.randn(2, 3, 224, 224).to(device)
     
     with torch.no_grad():
@@ -95,8 +90,7 @@ def test_mae_with_real_data():
     
     # Test both models
     models = {
-        "ProperMAE": MAEModel(...).to(device),  # your config
-        "SimpleMAE": SimpleMAEModel(...).to(device)
+        "ProperMAE": MAEModel(...).to(device)
     }
     
     # Get real data

@@ -7,7 +7,6 @@ import os
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_mae import MAEModel
-from models.vit_mae import SimpleMAEModel
 from utils.dataloader import get_dataloader 
 
 def validate_mae(model, cfg, device):
