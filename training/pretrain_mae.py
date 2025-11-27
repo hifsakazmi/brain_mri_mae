@@ -14,7 +14,7 @@ def validate_mae(model, cfg, device):
     model.eval()
     val_loader, _ = get_dataloader(
         dataset_name=cfg.DATASET,  
-        split="test",
+        split="val",
         batch_size=cfg.MAE_BATCH_SIZE,
         num_workers=2 
     )

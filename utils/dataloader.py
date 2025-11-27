@@ -1,6 +1,6 @@
 import os
 import zipfile
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 from datasets.mri_dataset import MRIDataset
 import config
@@ -104,5 +104,27 @@ def get_dataloader(dataset_name="dataset1", split="train", batch_size=None, num_
         raise ValueError(f"Unknown dataset {dataset_name}")
 
     dataset = MRIDataset(path, transform)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=(split=="train"), num_workers=num_workers)
+    # Handle different splits
+
+    if split == "test":
+        loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+        print(f"✅ Test dataset: {len(dataset)} samples")
+    else: 
+        # Split training data into 80% train, 20% validation
+        total_size = len(dataset)
+        train_size = int(0.8 * total_size)
+        val_size = total_size - train_size
+        train_dataset, val_dataset = random_split(
+            dataset, 
+            [train_size, val_size],
+            generator=torch.Generator().manual_seed(42)  # For reproducibility
+        )
+        
+        if split == "train":
+            loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+            print(f"✅ Train dataset: {len(train_dataset)} samples (80% of training data)")
+        else:  # val
+            loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+            print(f"✅ Validation dataset: {len(val_dataset)} samples (20% of training data)")
+
     return loader, num_classes

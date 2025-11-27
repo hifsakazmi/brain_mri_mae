@@ -280,7 +280,7 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     
     val_loader, _ = get_dataloader(
         dataset_name=dataset_name,
-        split="test", 
+        split="val", 
         batch_size=cfg.CLASSIFIER_BATCH_SIZE,
         num_workers=2
     )
