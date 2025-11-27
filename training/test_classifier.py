@@ -112,10 +112,8 @@ def find_best_classifier_model():
     """Find the best classifier model from possible locations"""
     possible_paths = [
         config.CLASSIFIER_SAVE_PATH,
-        "/content/drive/MyDrive/brain_mri_mae/models/classifier_best.pth",
         "/content/drive/MyDrive/brain_mri_mae/models/classifier.pth",
         "./models/classifier.pth",
-        "/content/drive/MyDrive/brain_mri_mae/models/finetuned_classifier.pth"
     ]
     
     for path in possible_paths:
