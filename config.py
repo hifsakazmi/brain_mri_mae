@@ -8,7 +8,7 @@ FINETUNE_EPOCHS = 5
 #----------------------------
 # MAE Settings
 #----------------------------
-MAE_LEARNING_RATE = 1e-5
+MAE_LEARNING_RATE = 1.5e-4
 MAE_BATCH_SIZE = 32
 MAE_EPOCHS = 10
 MAE_IMG_SIZE = 224
@@ -26,7 +26,7 @@ MAE_FULL_SAVE_PATH = "./models/mae_full.pth"
 #------------------------------
 # Classifier Settings
 #------------------------------ 
-CLASSIFIER_LEARNING_RATE = 1e-5
+CLASSIFIER_LEARNING_RATE = 4e-4
 CLASSIFIER_BATCH_SIZE = 32
 CLASSIFIER_EPOCHS = 30
 CLASSIFIER_WEIGHT_DECAY = 0.01
@@ -36,7 +36,7 @@ AUGMENTATION = True
 #----------------------------
 # Selected Dataset
 #----------------------------
-DATASET = "dataset1"
+DATASET = "dataset2"
 
 # ---------------------------
 # Dataset 1: binary brain tumor
