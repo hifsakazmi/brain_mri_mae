@@ -8,7 +8,7 @@ FINETUNE_EPOCHS = 5
 #----------------------------
 # MAE Settings
 #----------------------------
-MAE_LEARNING_RATE = 1.5e-4
+MAE_LEARNING_RATE = 1e-5
 MAE_BATCH_SIZE = 32
 MAE_EPOCHS = 10
 MAE_IMG_SIZE = 224
@@ -36,7 +36,7 @@ AUGMENTATION = True
 #----------------------------
 # Selected Dataset
 #----------------------------
-DATASET = "dataset1"
+DATASET = "dataset2"
 
 # ---------------------------
 # Dataset 1: binary brain tumor
