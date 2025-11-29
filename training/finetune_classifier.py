@@ -369,13 +369,13 @@ def finetune_classifier(cfg, dataset_name, use_drive_checkpoint=True):
     print("=============================")
     
     # Loss function
-    #if dataset_name == "dataset2":
+    if dataset_name == "dataset2":
         # Apply class weights for 4-class imbalance
         # Weights computed with inverse frequency
-        #class_weights = torch.tensor([1.63, 0.91, 0.87, 0.88]).to(device)
-        #criterion = nn.CrossEntropyLoss()
-    #else:
-    criterion = nn.CrossEntropyLoss()
+        class_weights = torch.tensor([1.075, 1.061, 0.891, 0.975]).to(device)
+        criterion = nn.CrossEntropyLoss(class_weights=weights)
+    else:
+        criterion = nn.CrossEntropyLoss()
     
     # Enhanced fine-tuning: Differential learning rates
     no_decay = ['bias', 'LayerNorm.weight']
